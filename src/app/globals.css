@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+@theme {
+  /* Backgrounds & Surfaces */
+  --color-background-light: #f8fafc;
+  --color-surface-light: #ffffff;
+
+  /* Text Colors */
+  --color-text-primary: #1a202c;
+  --color-text-secondary: #4a5568;
+
+  /* Brand Colors */
+  --color-brand-electric: #007bff;
+  --color-brand-accent: #28a745;
+
+  /* Status Colors */
+  --color-status-warning: #ffc107;
+  --color-status-error: #dc3545;
+
+  /* Typography */
+  --font-sans: "Inter", "system-ui", "sans-serif";
+  --font-mono: "Fira Code", "monospace";
+
+  /* Shadow Glows (for that 'Performance Tech' feel) */
+  --shadow-glow-blue: 0 0 15px -3px rgba(0, 123, 255, 0.4);
+  --shadow-glow-green: 0 0 15px -3px rgba(40, 167, 69, 0.4);
+}
+
+:root {
+  --background: #f8fafc;
+  --foreground: #1a202c;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Base utility for cards/surfaces */
+.card-tech {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+.card-tech:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
