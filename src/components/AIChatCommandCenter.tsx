@@ -78,6 +78,14 @@ export default function AIChatCommandCenter({ profile, recentWorkouts, onSuggest
       }
     } catch (error) {
       console.error("Chat error:", error);
+      const errorMsg: ChatMessage = {
+        id: Date.now().toString(),
+        userId: user.uid,
+        role: 'model',
+        content: "_SYSTEM ERROR: Tactical link lost. Please retry report transmission._",
+        timestamp: Date.now()
+      };
+      setMessages(prev => [...prev, errorMsg]);
     } finally {
       setIsTyping(false);
     }
@@ -96,7 +104,7 @@ export default function AIChatCommandCenter({ profile, recentWorkouts, onSuggest
              <div className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full bg-green-500 border-2 border-slate-950" />
           </div>
           <div>
-            <span className="font-black italic uppercase text-xs tracking-[0.3em] text-white block">Coach AI V3.0</span>
+            <span className="font-black italic uppercase text-xs tracking-[0.3em] text-white block">{profile.coachName || "Coach AI V3.0"}</span>
             <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest">Protocol: Active Intelligence</span>
           </div>
         </div>

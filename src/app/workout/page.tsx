@@ -7,7 +7,7 @@ import { workoutService } from "@/services/workoutService";
 import { Routine, Workout } from "@/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import WorkoutLogger from "@/components/WorkoutLogger";
-import { Calendar as CalendarIcon, Clock, ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, ChevronLeft, ChevronRight, Play, XCircle } from "lucide-react";
 
 export default function WorkoutPage() {
   const { user, loading } = useAuth();
@@ -65,7 +65,16 @@ export default function WorkoutPage() {
                   <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse" />
                   <h2 className="text-4xl font-black italic uppercase tracking-tighter">Live Session</h2>
                </div>
-               <button onClick={() => setIsExecuting(false)} className="text-xs font-black uppercase text-slate-400 hover:text-red-500">Terminate</button>
+               <button 
+                 onClick={() => {
+                   if(confirm("ABORT MISSION? Telemetry will not be saved.")) {
+                     setIsExecuting(false);
+                   }
+                 }} 
+                 className="flex items-center gap-2 text-xs font-black uppercase text-slate-400 hover:text-red-500 transition-colors"
+               >
+                 <XCircle className="w-4 h-4" /> Abort
+               </button>
              </div>
              <WorkoutLogger 
                 initialData={activeWorkout} 

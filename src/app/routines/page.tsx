@@ -6,7 +6,7 @@ import { routineService } from "@/services/routineService";
 import { Routine } from "@/types";
 import { useRouter } from "next/navigation";
 import WorkoutLogger from "@/components/WorkoutLogger";
-import { Plus, Trash2, Edit3, Dumbbell } from "lucide-react";
+import { Plus, Trash2, Edit3, Dumbbell, XCircle } from "lucide-react";
 
 export default function RoutinesPage() {
   const { user, loading } = useAuth();
@@ -53,7 +53,16 @@ export default function RoutinesPage() {
           <div className="animate-in slide-in-from-bottom-4 duration-300">
              <div className="flex items-center justify-between mb-8">
                <h2 className="text-4xl font-black italic uppercase tracking-tighter">Drafting Protocol</h2>
-               <button onClick={() => setIsDrafting(false)} className="text-xs font-black uppercase text-slate-400 hover:text-red-500">Abort</button>
+               <button 
+                 onClick={() => {
+                   if(confirm("DISCARD PROTOCOL? Changes will not be stored.")) {
+                     setIsDrafting(false);
+                   }
+                 }} 
+                 className="flex items-center gap-2 text-xs font-black uppercase text-slate-400 hover:text-red-500 transition-colors"
+               >
+                 <XCircle className="w-4 h-4" /> Discard
+               </button>
              </div>
              <WorkoutLogger 
                 initialData={selectedRoutine} 

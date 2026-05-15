@@ -9,7 +9,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   AreaChart, Area, BarChart, Bar, Cell
 } from "recharts";
-import { Activity, Target, Zap, TrendingUp, History } from "lucide-react";
+import { Activity, Target, Zap, TrendingUp, History, ShieldCheck } from "lucide-react";
 
 export default function AnalyticsPage() {
   const { user, loading } = useAuth();
@@ -79,6 +79,47 @@ export default function AnalyticsPage() {
                 <kpi.icon className="w-8 h-8 text-slate-100 group-hover:text-brand-electric/20 transition-colors" />
              </div>
            ))}
+        </div>
+
+        {/* Coach Intelligence Report */}
+        <div className="space-y-6">
+           <h3 className="text-sm font-black italic uppercase tracking-widest border-b-2 border-slate-900 pb-2 inline-block">Coach Intelligence Report</h3>
+           <div className="card-premium p-10 bg-slate-950 text-white border-none shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-10 opacity-5">
+                 <ShieldCheck className="w-40 h-40" />
+              </div>
+              <div className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-12">
+                 <div className="space-y-4">
+                    <p className="text-[10px] font-black text-brand-electric uppercase tracking-[0.3em]">Current Assessment</p>
+                    <p className="text-sm font-bold leading-relaxed text-slate-300 italic">
+                       "Athlete is showing significant volume progression in primary compounds. Tactical consistency remains high. No new physiological anomalies reported in recent comms."
+                    </p>
+                 </div>
+                 <div className="space-y-6">
+                    <p className="text-[10px] font-black text-brand-electric uppercase tracking-[0.3em]">Critical Metrics</p>
+                    <div className="space-y-3">
+                       {[
+                         { label: "Form Integrity", val: "92%" },
+                         { label: "Metabolic Flux", val: "Optimal" },
+                         { label: "Injury Risk", val: "Low" }
+                       ].map((m, i) => (
+                         <div key={i} className="flex justify-between items-center border-b border-white/10 pb-2">
+                            <span className="text-[10px] font-bold uppercase text-slate-500">{m.label}</span>
+                            <span className="text-xs font-black italic">{m.val}</span>
+                         </div>
+                       ))}
+                    </div>
+                 </div>
+                 <div className="space-y-4">
+                    <p className="text-[10px] font-black text-brand-electric uppercase tracking-[0.3em]">Next Directive</p>
+                    <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
+                       <p className="text-xs font-bold text-slate-400 leading-relaxed uppercase">
+                          Maintain current intensity protocols. Ensure 48hr recovery window for compromised muscle groups. Report any localized joint inflammation immediately.
+                       </p>
+                    </div>
+                 </div>
+              </div>
+           </div>
         </div>
 
         {/* Main Statistical Core */}

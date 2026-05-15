@@ -16,6 +16,7 @@ export interface UserProfile {
   
   // Coach Orchestration
   coachPersonality?: 'drill_sergeant' | 'zen_master' | 'data_scientist' | 'custom';
+  coachName?: string;
   customCoachSettings?: {
     intensity: number; // 1-10
     cautionLevel: number; // 1-10

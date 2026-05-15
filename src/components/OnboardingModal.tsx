@@ -132,9 +132,21 @@ export default function OnboardingModal({ userId, onComplete }: OnboardingModalP
           <div className="space-y-8 animate-in fade-in slide-in-from-right-4">
             <div className="text-center space-y-3">
                <h2 className="text-4xl font-black italic uppercase tracking-tighter">Orchestrator</h2>
-               <p className="text-slate-400 text-sm">Select your coaching personality template.</p>
+               <p className="text-slate-400 text-sm">Select your coaching personality and designation.</p>
             </div>
-            <div className="grid grid-cols-1 gap-3">
+            
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Coach Designation (Name)</label>
+              <input 
+                type="text" 
+                placeholder="E.g. UNIT-7, SARGE, ATHENA..." 
+                value={data.coachName || ""}
+                onChange={e => setData({...data, coachName: e.target.value})}
+                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 focus:border-brand-electric outline-none font-bold uppercase italic"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto pr-2">
               {PERSONALITIES.map(p => (
                 <button
                   key={p.id}
