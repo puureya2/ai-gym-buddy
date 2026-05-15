@@ -1,54 +1,86 @@
 @import "tailwindcss";
 
 @theme {
-  /* Backgrounds & Surfaces */
-  --color-background-light: #f8fafc;
-  --color-surface-light: #ffffff;
-
-  /* Text Colors */
-  --color-text-primary: #1a202c;
-  --color-text-secondary: #4a5568;
-
-  /* Brand Colors */
-  --color-brand-electric: #007bff;
-  --color-brand-accent: #28a745;
-
-  /* Status Colors */
-  --color-status-warning: #ffc107;
-  --color-status-error: #dc3545;
-
-  /* Typography */
-  --font-sans: "Inter", "system-ui", "sans-serif";
-  --font-mono: "Fira Code", "monospace";
-
-  /* Shadow Glows (for that 'Performance Tech' feel) */
-  --shadow-glow-blue: 0 0 15px -3px rgba(0, 123, 255, 0.4);
-  --shadow-glow-green: 0 0 15px -3px rgba(40, 167, 69, 0.4);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  
+  --color-brand-electric: #00FFFF;
+  --color-brand-steel: #E2E8F0;
+  --color-brand-chrome: #94A3B8;
+  --color-brand-obsidian: #020617;
 }
 
 :root {
   --background: #f8fafc;
-  --foreground: #1a202c;
+  --foreground: #020617;
+  --metallic-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+  --chrome-gradient: linear-gradient(180deg, #94a3b8 0%, #475569 100%);
+  --electric-glow: 0 0 20px rgba(0, 255, 255, 0.3);
 }
 
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-950 antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
 }
 
-/* Base utility for cards/surfaces */
-.card-tech {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  transition: box-shadow 0.2s ease-in-out;
+@layer components {
+  .card-premium {
+    @apply bg-white border border-slate-200 rounded-3xl shadow-sm transition-all duration-300;
+    background: linear-gradient(145deg, #ffffff, #f1f5f9);
+  }
+
+  .card-premium:hover {
+    @apply border-brand-electric/50 shadow-lg;
+    transform: translateY(-2px);
+  }
+
+  .metallic-button {
+    @apply bg-slate-950 text-white font-black italic uppercase tracking-widest px-8 py-4 rounded-2xl transition-all relative overflow-hidden;
+    background: linear-gradient(180deg, #1e293b 0%, #020617 100%);
+  }
+
+  .metallic-button::after {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  }
+
+  .metallic-button:hover::after {
+    @apply opacity-100;
+  }
+
+  .glass-panel {
+    @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-xl;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-slate-950 to-slate-500;
+  }
+
+  .neon-border {
+    @apply border-brand-electric shadow-[0_0_10px_rgba(0,255,255,0.2)];
+  }
 }
 
-.card-tech:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+/* Custom Scrollbar for Chrome/Obsidian feel */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full hover:bg-slate-400 transition-colors;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
 }

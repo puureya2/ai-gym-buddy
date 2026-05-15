@@ -60,9 +60,25 @@ export const authService = {
         preferences: {
           unitSystem: 'metric',
           theme: 'light',
-        }
+        },
+        totalWorkoutsCompleted: 0,
+        lastActive: 0,
+        tutorialStep: 0
       };
       await setDoc(userDocRef, newProfile);
+    }
+  },
+
+  /**
+   * Update any part of the user profile
+   */
+  async updateProfile(userId: string, data: Partial<UserProfile>): Promise<void> {
+    try {
+      const userDocRef = doc(db, "users", userId);
+      await updateDoc(userDocRef, data);
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+      throw error;
     }
   },
 
