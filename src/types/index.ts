@@ -33,6 +33,7 @@ export interface UserProfile {
     unitSystem: 'metric' | 'imperial';
     theme: 'light' | 'dark';
   };
+  role: 'user' | 'admin';
 }
 
 export interface ChatMessage {

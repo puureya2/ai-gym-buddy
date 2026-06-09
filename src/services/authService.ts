@@ -3,6 +3,7 @@ import {
   GoogleAuthProvider, 
   signOut as firebaseSignOut, 
   onAuthStateChanged,
+  signInWithEmailAndPassword,
   User
 } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
@@ -26,6 +27,28 @@ export const authService = {
       return user;
     } catch (error) {
       console.error("Error signing in with Google:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Sign in with Email/Password (Admin)
+   */
+  async signInAdmin(email: string, pass: string): Promise<User> {
+    try {
+      const result = await signInWithEmailAndPassword(auth, email, pass);
+      const user = result.user;
+      
+      // Check if user profile exists and has admin role
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      if (!userDoc.exists() || userDoc.data()?.role !== 'admin') {
+        await firebaseSignOut(auth);
+        throw new Error("UNAUTHORIZED: Administrative credentials required.");
+      }
+      
+      return user;
+    } catch (error) {
+      console.error("Error signing in as Admin:", error);
       throw error;
     }
   },
@@ -63,7 +86,8 @@ export const authService = {
         },
         totalWorkoutsCompleted: 0,
         lastActive: 0,
-        tutorialStep: 0
+        tutorialStep: 1, // New users start at step 1
+        role: 'user'
       };
       await setDoc(userDocRef, newProfile);
     }
@@ -78,19 +102,6 @@ export const authService = {
       await updateDoc(userDocRef, data);
     } catch (error) {
       console.error("Error updating user profile:", error);
-      throw error;
-    }
-  },
-
-  /**
-   * Update user fitness goals
-   */
-  async updateUserGoals(userId: string, goals: string[]): Promise<void> {
-    try {
-      const userDocRef = doc(db, "users", userId);
-      await updateDoc(userDocRef, { fitnessGoals: goals });
-    } catch (error) {
-      console.error("Error updating user goals:", error);
       throw error;
     }
   },

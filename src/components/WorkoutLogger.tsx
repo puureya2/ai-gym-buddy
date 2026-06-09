@@ -20,12 +20,30 @@ export default function WorkoutLogger({ initialData, onComplete, isRoutineCreati
     (initialData && 'name' in initialData ? (initialData as Routine).name : undefined) ||
     "Field Operation"
   );
-  const [exercises, setExercises] = useState<Exercise[]>(initialData?.exercises || []);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [startTime] = useState(Date.now());
   const [elapsed, setElapsed] = useState(0);
+
+  // Initialize exercises with proper data mapping
+  useEffect(() => {
+    if (initialData?.exercises) {
+      const mappedExercises = initialData.exercises.map(ex => ({
+        ...ex,
+        id: ex.id || Math.random().toString(36).substr(2, 9),
+        sets: ex.sets.map(s => ({
+          ...s,
+          // Ensure suggested values are mapped to actual input values for the logger
+          weight: s.weight || s.plannedWeight || 0,
+          reps: s.reps || s.plannedReps || 10,
+          completed: s.completed ?? false
+        }))
+      }));
+      setExercises(mappedExercises);
+    }
+  }, [initialData]);
 
   useEffect(() => {
     if (!isRoutineCreation) {
@@ -45,7 +63,7 @@ export default function WorkoutLogger({ initialData, onComplete, isRoutineCreati
       id: Math.random().toString(36).substr(2, 9),
       name: "",
       category: "strength",
-      sets: [{ reps: 0, weight: 0, completed: false }],
+      sets: [{ reps: 10, weight: 0, completed: false }],
     };
     setExercises([...exercises, newExercise]);
   };
@@ -53,7 +71,7 @@ export default function WorkoutLogger({ initialData, onComplete, isRoutineCreati
   const addSet = (exerciseId: string) => {
     setExercises(exercises.map(ex => {
       if (ex.id === exerciseId) {
-        return { ...ex, sets: [...ex.sets, { reps: 0, weight: 0, completed: false }] };
+        return { ...ex, sets: [...ex.sets, { reps: 10, weight: 0, completed: false }] };
       }
       return ex;
     }));
