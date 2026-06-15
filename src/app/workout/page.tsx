@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { routineService } from "@/services/routineService";
 import { workoutService } from "@/services/workoutService";
@@ -9,7 +9,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import WorkoutLogger from "@/components/WorkoutLogger";
 import { Calendar as CalendarIcon, Clock, ChevronLeft, ChevronRight, Play, XCircle } from "lucide-react";
 
-export default function WorkoutPage() {
+function WorkoutContent() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -151,5 +151,13 @@ export default function WorkoutPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function WorkoutPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center animate-pulse">Initializing Field Operations...</div>}>
+      <WorkoutContent />
+    </Suspense>
   );
 }
