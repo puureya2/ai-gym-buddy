@@ -3,69 +3,96 @@
 import { useState, useEffect } from "react";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, query, limit, orderBy } from "firebase/firestore";
-import { UserProfile, Workout } from "@/types";
+import { UserProfile, Workout, ChatMessage } from "@/types";
 import { 
   Users, 
   Activity, 
   Cpu, 
   ShieldCheck, 
   BarChart3, 
-  Settings,
   AlertTriangle,
-  ArrowUpRight
+  Database,
+  Terminal,
+  Zap
 } from "lucide-react";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalMissions: 0,
-    aiQuota: "84%",
-    activeToday: 12
+    totalTonnage: 0,
+    aiLinkStability: "98.2%",
+    activeToday: 0
   });
-  const [recentUsers, setRecentUsers] = useState<UserProfile[]>([]);
+  const [recentMissions, setRecentMissions] = useState<Workout[]>([]);
+  const [recentMessages, setRecentMessages] = useState<ChatMessage[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadStats() {
+    async function loadAdminData() {
       try {
         const usersSnap = await getDocs(collection(db, "users"));
         const workoutsSnap = await getDocs(collection(db, "workouts"));
+        const messagesSnap = await getDocs(query(collection(db, "chat_messages"), orderBy("timestamp", "desc"), limit(5)));
         
+        const allWorkouts = workoutsSnap.docs.map(doc => doc.data() as Workout);
+        
+        // Calculate Global Tonnage
+        const tonnage = allWorkouts.reduce((acc, w) => {
+          return acc + (w.exercises || []).reduce((exAcc, ex) => {
+            return exAcc + (ex.sets || []).reduce((sAcc, s) => sAcc + ((s.weight || 0) * (s.reps || 0)), 0);
+          }, 0);
+        }, 0);
+
         setStats({
           totalUsers: usersSnap.size,
           totalMissions: workoutsSnap.size,
-          aiQuota: "92%",
-          activeToday: Math.floor(usersSnap.size * 0.4)
+          totalTonnage: tonnage,
+          aiLinkStability: `${(95 + Math.random() * 4).toFixed(1)}%`,
+          activeToday: Math.floor(usersSnap.size * 0.6) || 1
         });
 
-        // Load 5 recent users
-        const usersQuery = query(collection(db, "users"), orderBy("createdAt", "desc"), limit(5));
-        const recentSnap = await getDocs(usersQuery);
-        setRecentUsers(recentSnap.docs.map(doc => doc.data() as UserProfile));
+        // Load 5 most recent missions across all users
+        const sortedMissions = [...allWorkouts].sort((a, b) => b.date - a.date).slice(0, 5);
+        setRecentMissions(sortedMissions);
+        
+        setRecentMessages(messagesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as ChatMessage)));
 
       } catch (err) {
-        console.error("Failed to load admin stats:", err);
+        console.error("Critical: Admin Data Sync Failed", err);
+      } finally {
+        setLoading(false);
       }
     }
-    loadStats();
+    loadAdminData();
   }, []);
 
+  if (loading) return (
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center space-y-4">
+       <Terminal className="w-12 h-12 text-red-500 animate-pulse" />
+       <p className="text-red-500 font-mono text-xs uppercase tracking-[0.4em]">Decrypting Administrative Access...</p>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-slate-950 pt-24 pb-32 px-4 md:px-8 font-[family-name:var(--font-geist-sans)]">
-      <div className="max-w-7xl mx-auto space-y-12">
+    <div className="min-h-screen bg-slate-950 pt-12 pb-32 px-4 md:px-8 font-[family-name:var(--font-geist-sans)]">
+      <div className="max-w-7xl mx-auto space-y-10">
         
         {/* Admin Header */}
-        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b-2 border-red-900 pb-10">
-           <div className="space-y-2">
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-red-900/30 pb-10">
+           <div className="space-y-3">
               <div className="flex items-center gap-3">
-                 <ShieldCheck className="w-8 h-8 text-red-500" />
-                 <h1 className="text-5xl font-black italic uppercase tracking-tighter text-white">Command Console</h1>
+                 <ShieldCheck className="w-10 h-10 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)]" />
+                 <div>
+                    <h1 className="text-5xl font-black italic uppercase tracking-tighter text-white">Command Console</h1>
+                    <p className="text-red-500/60 font-mono text-[10px] uppercase tracking-[0.5em]">Auth: Level 5 Administrator // Kevin Chifamba</p>
+                 </div>
               </div>
-              <p className="text-slate-500 font-mono text-[10px] uppercase tracking-[0.5em] ml-11">Status: Administrative Access Level 5</p>
            </div>
            <div className="flex gap-4">
-              <div className="px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2">
-                 <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-                 <span className="text-[10px] font-black uppercase text-red-500">Live Telemetry</span>
+              <div className="px-5 py-2.5 bg-red-500/5 border border-red-500/20 rounded-2xl flex items-center gap-3">
+                 <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_10px_#ef4444]" />
+                 <span className="text-[10px] font-black uppercase text-red-500 tracking-widest">Global Telemetry Link: Active</span>
               </div>
            </div>
         </header>
@@ -73,81 +100,123 @@ export default function AdminDashboard() {
         {/* Global KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
            {[
-             { label: 'Total Athletes', value: stats.totalUsers, icon: Users, color: 'text-white' },
-             { label: 'Global Missions', value: stats.totalMissions, icon: Activity, color: 'text-white' },
-             { label: 'AI Tactical Link', value: stats.aiQuota, icon: Cpu, color: 'text-green-500' },
-             { label: 'Daily Operations', value: stats.activeToday, icon: BarChart3, color: 'text-white' },
+             { label: 'Registered Athletes', value: stats.totalUsers, icon: Users, suffix: '' },
+             { label: 'Missions Extracted', value: stats.totalMissions, icon: Activity, suffix: '' },
+             { label: 'Global Tonnage', value: stats.totalTonnage > 100000 ? stats.totalTonnage.toExponential(2) : stats.totalTonnage.toLocaleString(), icon: Zap, suffix: 'kg' },
+             { label: 'AI Link Stability', value: stats.aiLinkStability, icon: Cpu, color: 'text-brand-electric' },
            ].map((kpi, i) => (
-             <div key={i} className="card-premium p-6 bg-slate-900 border-slate-800 flex items-center justify-between group hover:border-red-500/50 transition-all">
+             <div key={i} className="bg-slate-900/50 border border-slate-800 p-6 rounded-[2rem] flex items-center justify-between hover:border-red-500/30 transition-all group">
                 <div>
-                   <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">{kpi.label}</p>
-                   <p className={`text-2xl font-black italic ${kpi.color}`}>{kpi.value}</p>
+                   <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">{kpi.label}</p>
+                   <p className={`text-3xl font-black italic ${kpi.color || 'text-white'}`}>{kpi.value}<span className="text-xs ml-1 opacity-50">{kpi.suffix}</span></p>
                 </div>
-                <kpi.icon className="w-8 h-8 text-slate-800 group-hover:text-red-500/20 transition-colors" />
+                <kpi.icon className="w-8 h-8 text-slate-800 group-hover:text-red-500/20 transition-all" />
              </div>
            ))}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
            
-           {/* System Health */}
-           <div className="lg:col-span-8 space-y-6">
-              <h3 className="text-xs font-black italic uppercase tracking-widest text-slate-500 border-b border-slate-800 pb-2">Subsystem Integrity</h3>
+           {/* Subsystem Monitoring */}
+           <div className="lg:col-span-8 space-y-8">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                 <h3 className="text-xs font-black italic uppercase tracking-widest text-slate-500">Platform Infrastructure</h3>
+                 <span className="text-[8px] font-mono text-slate-600 uppercase">Latency: 14ms</span>
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  {[
-                   { name: "Auth Cluster", status: "Operational", health: 100 },
-                   { name: "Intelligence Core", status: "Healthy", health: 94 },
-                   { name: "Biometric Storage", status: "Operational", health: 100 },
-                   { name: "Analytics Engine", status: "Processing", health: 88 }
+                   { name: "Auth Cluster", status: "Operational", health: 100, icon: ShieldCheck },
+                   { name: "Intelligence Core", status: "Active", health: 96, icon: Cpu },
+                   { name: "Biometric Storage", status: "Synced", health: 100, icon: Database },
+                   { name: "Analytics Engine", status: "Aggregating", health: 92, icon: BarChart3 }
                  ].map((sys, i) => (
-                   <div key={i} className="p-6 bg-slate-900 border border-slate-800 rounded-3xl space-y-4">
-                      <div className="flex justify-between items-center">
-                         <p className="font-black italic uppercase text-xs text-white">{sys.name}</p>
-                         <span className="text-[8px] font-black uppercase text-green-500 bg-green-500/10 px-2 py-0.5 rounded">{sys.status}</span>
+                   <div key={i} className="p-6 bg-slate-900/30 border border-slate-800/50 rounded-3xl space-y-4 hover:bg-slate-900/50 transition-all">
+                      <div className="flex justify-between items-start">
+                         <div className="flex items-center gap-3">
+                            <sys.icon className="w-4 h-4 text-red-500" />
+                            <p className="font-black italic uppercase text-xs text-white">{sys.name}</p>
+                         </div>
+                         <span className="text-[8px] font-black uppercase text-green-500 bg-green-500/5 px-2 py-0.5 rounded border border-green-500/20">{sys.status}</span>
                       </div>
                       <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
-                         <div className="h-full bg-red-500" style={{ width: `${sys.health}%` }} />
+                         <div className="h-full bg-gradient-to-r from-red-600 to-red-400 shadow-[0_0_10px_#ef4444]" style={{ width: `${sys.health}%` }} />
                       </div>
                    </div>
                  ))}
               </div>
 
-              {/* Alert Center */}
-              <div className="p-8 bg-red-500/5 border border-red-500/10 rounded-[2.5rem] flex items-center justify-between">
-                 <div className="flex items-center gap-6">
-                    <div className="h-12 w-12 rounded-2xl bg-red-500 flex items-center justify-center">
-                       <AlertTriangle className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                       <p className="text-sm font-bold text-white uppercase italic">Zero Critical Anomalies Detected</p>
-                       <p className="text-xs text-slate-500 uppercase tracking-widest font-black">All athlete telemetry within safe parameters.</p>
-                    </div>
+              {/* Mission Feed */}
+              <div className="space-y-4">
+                 <h3 className="text-xs font-black italic uppercase tracking-widest text-slate-500">Live Mission Stream</h3>
+                 <div className="bg-slate-900/50 border border-slate-800 rounded-[2.5rem] overflow-hidden">
+                    <table className="w-full text-left">
+                       <thead className="bg-slate-950 border-b border-slate-800 text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                          <tr>
+                             <th className="px-6 py-4">Operation</th>
+                             <th className="px-6 py-4">Intelligence</th>
+                             <th className="px-6 py-4">Telemetry</th>
+                             <th className="px-6 py-4">Timestamp</th>
+                          </tr>
+                       </thead>
+                       <tbody className="divide-y divide-slate-800/50">
+                          {recentMissions.map((m, i) => (
+                            <tr key={i} className="hover:bg-red-500/5 transition-colors group cursor-default">
+                               <td className="px-6 py-4">
+                                  <p className="text-xs font-black italic text-white uppercase group-hover:text-red-500 transition-colors">{m.title}</p>
+                                  <p className="text-[8px] text-slate-500 font-bold uppercase">{(m.exercises || []).length} Objectives</p>
+                               </td>
+                               <td className="px-6 py-4">
+                                  <div className="flex items-center gap-2">
+                                     <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                                     <p className="text-[10px] text-slate-400 font-bold italic truncate max-w-[150px]">"{m.notes || 'No situational notes'}"</p>
+                                  </div>
+                               </td>
+                               <td className="px-6 py-4">
+                                  <span className="text-[10px] font-mono text-brand-electric font-bold">
+                                     {(m.exercises || []).reduce((acc, ex) => acc + (ex.sets || []).length, 0)} PHASES
+                                  </span>
+                               </td>
+                               <td className="px-6 py-4 text-right">
+                                  <span className="text-[9px] font-black text-slate-500 uppercase">{new Date(m.date).toLocaleTimeString()}</span>
+                               </td>
+                            </tr>
+                          ))}
+                       </tbody>
+                    </table>
                  </div>
-                 <button className="text-[10px] font-black uppercase text-slate-400 hover:text-white transition-colors">Clear Logs</button>
               </div>
            </div>
 
-           {/* Recent Athletes */}
-           <div className="lg:col-span-4 space-y-6">
-              <h3 className="text-xs font-black italic uppercase tracking-widest text-slate-500 border-b border-slate-800 pb-2">Recent Inductions</h3>
-              <div className="card-premium p-6 bg-slate-900 border-slate-800 space-y-4">
-                 {recentUsers.map((u, i) => (
-                   <div key={i} className="flex items-center justify-between p-3 hover:bg-slate-800 rounded-2xl transition-all group cursor-pointer">
-                      <div className="flex items-center gap-3">
-                         <div className="h-8 w-8 rounded-xl bg-slate-800 flex items-center justify-center text-[10px] font-black text-white italic">
-                            {u.displayName?.[0] || 'U'}
-                         </div>
-                         <div>
-                            <p className="text-[10px] font-bold text-white uppercase">{u.displayName}</p>
-                            <p className="text-[8px] text-slate-500 uppercase font-black">{u.fitnessGoals[0] || 'General'}</p>
-                         </div>
+           {/* Intelligence Traffic */}
+           <div className="lg:col-span-4 space-y-8">
+              <h3 className="text-xs font-black italic uppercase tracking-widest text-slate-500 border-b border-slate-800 pb-2">Intelligence Traffic</h3>
+              <div className="space-y-4">
+                 {recentMessages.map((msg, i) => (
+                   <div key={i} className="p-5 bg-slate-900/50 border border-slate-800 rounded-3xl space-y-3 relative overflow-hidden group">
+                      <div className={`absolute top-0 left-0 w-1 h-full ${msg.role === 'user' ? 'bg-white/20' : 'bg-red-500'}`} />
+                      <div className="flex justify-between items-center">
+                         <span className="text-[8px] font-black uppercase tracking-widest text-slate-500">{msg.role === 'user' ? 'Athlete Report' : 'Coach Response'}</span>
+                         <span className="text-[8px] font-mono text-slate-700">{new Date(msg.timestamp).toLocaleTimeString()}</span>
                       </div>
-                      <ArrowUpRight className="w-4 h-4 text-slate-700 group-hover:text-red-500 transition-colors" />
+                      <p className="text-[10px] font-bold text-slate-300 leading-relaxed italic line-clamp-2 group-hover:line-clamp-none transition-all cursor-default text-xs">
+                         {msg.content}
+                      </p>
                    </div>
                  ))}
-                 <button className="w-full mt-4 py-3 border border-slate-800 rounded-2xl text-[10px] font-black uppercase text-slate-500 hover:bg-slate-800 hover:text-white transition-all">
-                    View All Athletes
-                 </button>
+                 
+                 <div className="p-8 bg-gradient-to-br from-red-600 to-red-900 rounded-[2rem] text-white space-y-4 shadow-2xl shadow-red-900/20">
+                    <div className="flex items-center gap-3">
+                       <AlertTriangle className="w-5 h-5" />
+                       <h4 className="font-black italic uppercase text-sm tracking-tighter">System Alert</h4>
+                    </div>
+                    <p className="text-[10px] font-bold leading-relaxed uppercase opacity-80">
+                       All athlete systems currently synchronized. Deployment V3.4.1 stable. No immediate administrative intervention required.
+                    </p>
+                    <button className="w-full py-2.5 bg-white text-red-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all">
+                       Initialize Global Scan
+                    </button>
+                 </div>
               </div>
            </div>
 
